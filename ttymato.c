@@ -248,7 +248,7 @@ void update_pomodoro()
 			{
 				char message[100];
 				snprintf(message, sizeof(message), "%s end", get_interval_name());
-				notify("normal", 30000, "ttymato", message);
+				notify(NOTIFY_URGENCY_NORMAL, 30000, "ttymato", message);
 			}
 
 			if ( g_ttymato_config->options.autostart )
@@ -339,7 +339,7 @@ void draw_pomodoro(void)
 	/* separators
 	 */
 	wbkgdset(g_ttymato_config->curses.pomowin, COLOR_PAIR(0));
-	for ( i = 1 ; i < POMOVIEW_HEIGHT - 1; ++i )
+	for ( i = 2 ; i < POMOVIEW_HEIGHT - 3; ++i )
 		mvwaddch(g_ttymato_config->curses.pomowin, i, 1, '|');
 
 	/* status
@@ -452,40 +452,105 @@ void tick(void)
 
 void usage(void)
 {
-	printf("usage: ttymato [-hunbN]             \n"
-		"\t -h \t Print this help               \n"
-		"\t -u \t Urgent bell on intervals end  \n"
-		"\t -n \t Notification on intervals end \n"
-		"\t -N \t Don't quit on keypress        \n"
-		"\t -b \t Enable blinking colon         \n"
+	printf("usage: ttymato [-hunbN] [-D <pomodoro>,<break>,<longbreak>] [-p number] \n"
+		"\t -h \t Print this help                                        \n"
+		"\t -u \t Urgent bell on intervals end                           \n"
+		"\t -n \t Notification on intervals end                          \n"
+		"\t -N \t Don't quit on keypress                                 \n"
+		"\t -b \t Enable blinking colon                                  \n"
+		"\t -D \t Duration of pomodoro, break and longbreak (in minutes) \n"
+		"\t -p \t Number of pomodori                                     \n"
 		);
+}
+
+int parse_next_int(char *str, char *sep, int min, int max, unsigned int *value)
+{
+	char *token = strtok(str, sep);
+
+	if ( token == NULL )
+		return 0;
+
+	*value = atoi(token);
+	if ( *value >= max || *value <= min )
+		return 0;
+
+	return 1;
 }
 
 void parse_args(int argc, char **argv)
 {
 	int c;
 
-	while ( (c = getopt(argc, argv, "hunbN")) != -1 )
+	while ( (c = getopt(argc, argv, "hunbND:p:")) != -1 )
 	{
 		switch (c)
 		{
 			case 'h':
 			default:
-				usage();
-				exit(EXIT_SUCCESS);
-				break;
+			usage();
+			exit(EXIT_SUCCESS);
+			break;
+
 			case 'u':
-				g_ttymato_config->options.urgent = true;
-				break;
+			g_ttymato_config->options.urgent = true;
+			break;
+
 			case 'n':
-				g_ttymato_config->options.notify = true;
-				break;
+			g_ttymato_config->options.notify = true;
+			break;
+
 			case 'N':
-				g_ttymato_config->options.noquit = true;
-				break;
+			g_ttymato_config->options.noquit = true;
+			break;
+
 			case 'b':
-				g_ttymato_config->options.blink = true;
+			g_ttymato_config->options.blink = true;
+			break;
+
+			case 'D':
+			{
+				char *values = strdup(optarg);
+
+				/* Pomodori duration
+				 */
+				if ( !parse_next_int(values, ",", 0, 60, &g_ttymato_config->options.pomodori_duration) )
+				{
+						fprintf(stderr, "Error while parsing pomodori duration\n");
+						goto duration_end;
+				}
+				g_ttymato_config->options.pomodori_duration *= 60;
+
+				/* Break duration
+				 */
+				if ( !parse_next_int(NULL, ",", 0, 60, &g_ttymato_config->options.break_duration) )
+				{
+						fprintf(stderr, "Error while parsing break duration\n");
+						goto duration_end;
+				}
+				g_ttymato_config->options.break_duration *= 60;
+
+				/* Longbreak duration
+				 */
+				if ( !parse_next_int(NULL, ",", 0, 60, &g_ttymato_config->options.longbreak_duration) )
+				{
+						fprintf(stderr, "Error while parsing longbreak duration\n");
+						goto duration_end;
+				}
+				g_ttymato_config->options.longbreak_duration *= 60;
+
+				free(values);
 				break;
+
+duration_end:
+				free(values);
+				exit(EXIT_FAILURE);
+			}
+			break;
+
+			case 'p':
+			if ( atoi(optarg) > 0 )
+				g_ttymato_config->options.pomodori_number = atoi(optarg);
+			break;
 		}
 	}
 }

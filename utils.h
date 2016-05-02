@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <libnotify/notify.h>
 
 /*
  * \brief Generate a urgent bell to get the attention of the user
@@ -24,6 +25,6 @@ void urgent_bell(void);
  * \param summary message summary
  * \param message message to display
  */
-void notify(const char *urgency, unsigned int expire, const char *summary, const char *message);
+void notify(NotifyUrgency urgency, unsigned int expire, const char *summary, const char *message);
 
 #endif

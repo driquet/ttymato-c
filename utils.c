@@ -13,10 +13,15 @@ void urgent_bell(void)
 	fprintf(stdout, "\a\n");
 }
 
-void notify(const char *urgency, unsigned int expire, const char *summary, const char *message)
+void notify(NotifyUrgency urgency, unsigned int expire, const char *summary, const char *message)
 {
-	char cmd_buffer[250];
-	snprintf(cmd_buffer, sizeof(cmd_buffer), "notify-send -t %u -u %s \"%s\" \"%s\"",
-			expire, urgency, summary, message);
-	system(cmd_buffer);
+	NotifyNotification *n;
+	notify_init("ttymato");
+	n = notify_notification_new(summary, message, NULL);
+	notify_notification_set_timeout(n, expire);
+	notify_notification_set_urgency(n, urgency);
+	notify_notification_show(n, NULL);
+	g_object_unref(G_OBJECT(n));
+	notify_uninit();
 }
+
