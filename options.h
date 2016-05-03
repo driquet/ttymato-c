@@ -20,7 +20,6 @@ typedef struct
 {
 	bool      date;               /*!< display date */
 	bool      blink;              /*!< blink colons */
-	long      delay;              /*!< sleep delay (in seconds) */
 	bool      urgent;             /*!< make terminal urgent when an interval finishes */
 	bool      notify;             /*!< notify at the end of intervals */
 	bool      autostart;          /*!< autostart intervals */

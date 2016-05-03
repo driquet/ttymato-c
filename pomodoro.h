@@ -41,28 +41,30 @@ typedef struct
 } ttymato_pomodoro_t;
 
 
-/*
+/*!
  * \brief Initialize the pomodoro context
  *
  * \param ctx pomodoro context
  */
 void init_pomodoro(ttymato_pomodoro_t *ctx);
 
-/*
+/*!
  * \brief Update the pomodoro data
  *
  * \param ctx pomodoro context
+ * \param options ttymato options
+ *
  */
 void tick_pomodoro(ttymato_pomodoro_t *ctx, ttymato_options_t *options);
 
-/*
+/*!
  * \brief Update context and go to the next interval
  *
  * \param ctx pomodoro context
  */
 void next_interval(ttymato_pomodoro_t *ctx);
 
-/*
+/*!
  * \brief Pause/Resume interval
  *
  * \param ctx pomodoro context
@@ -70,7 +72,7 @@ void next_interval(ttymato_pomodoro_t *ctx);
 void toggle_pomodoro_state(ttymato_pomodoro_t *ctx);
 
 
-/*
+/*!
  * \brief Return the duration of an interval
  *
  * \param ctx pomodoro context
@@ -78,7 +80,7 @@ void toggle_pomodoro_state(ttymato_pomodoro_t *ctx);
  */
 int get_interval_duration(ttymato_pomodoro_t *ctx, pomodoro_state_t state);
 
-/*
+/*!
  * \brief Return current interval name
  *
  * \param ctx pomodoro context

@@ -17,10 +17,14 @@ void init_config(void)
 	 */
 	init_pomodoro(&g_ttymato_config->pomodoro);
 
+	/* Init ncurses
+	 */
+	init_ncurses(&g_ttymato_config->curses);
+
 	/* ttymato config
 	 */
 	g_ttymato_config->running = true;
-	g_ttymato_config->options.delay = DEFAULT_DELAY;
+	g_ttymato_config->delay   = DEFAULT_DELAY;
 
 	/* Init signals
 	 */
@@ -32,50 +36,13 @@ void init_config(void)
 	sigaction(SIGSEGV,  &sig, NULL);
 }
 
-void init_curses(void)
-{
-	initscr();
-	cbreak();
-	noecho();
-	keypad(stdscr, true);
-	start_color();
-	curs_set(false);
-	clear();
-	refresh();
-
-	g_ttymato_config->curses.clockwin = newwin(
-			CLOCKVIEW_HEIGHT,
-			CLOCKVIEW_WIDTH,
-			LINES / 2 - CLOCKVIEW_HEIGHT / 2,
-			COLS / 2 - TOTAL_WIDTH / 2
-		);
-
-	g_ttymato_config->curses.pomowin = newwin(
-			POMOVIEW_HEIGHT,
-			POMOVIEW_WIDTH,
-			LINES / 2 - CLOCKVIEW_HEIGHT / 2,
-			COLS / 2 - TOTAL_WIDTH / 2 + CLOCKVIEW_WIDTH
-		);
-
-
-	nodelay(stdscr, true);
-	wrefresh(g_ttymato_config->curses.clockwin);
-
-	/* Init colors
-	 */
-	init_pair(0, COLOR_BLACK, COLOR_BLACK);
-	init_pair(1, COLOR_BLACK, COLOR_WHITE);
-	init_pair(2, COLOR_GREEN, COLOR_BLACK);
-	refresh();
-}
-
 void signal_handler(int signal)
 {
 	switch(signal)
 	{
 		case SIGWINCH:
 			endwin();
-			init_curses();
+			init_ncurses(&g_ttymato_config->curses);
 			break;
 			/* Interruption signal */
 		case SIGINT:
@@ -111,47 +78,6 @@ void cleanup(void)
 	endwin();
 }
 
-void update_time(void)
-{
-	struct tm  *tm;
-	if ( g_ttymato_config->curses.display == TIME || g_ttymato_config->pomodoro.state == PAUSED )
-	{
-		g_ttymato_config->curses.digits[0] = g_ttymato_config->pomodoro.time.tm_hour / 10;
-		g_ttymato_config->curses.digits[1] = g_ttymato_config->pomodoro.time.tm_hour % 10;
-		g_ttymato_config->curses.digits[2] = g_ttymato_config->pomodoro.time.tm_min  / 10;
-		g_ttymato_config->curses.digits[3] = g_ttymato_config->pomodoro.time.tm_min  % 10;
-	}
-	else
-	{
-		if ( g_ttymato_config->curses.display == ELAPSED )
-			tm = &g_ttymato_config->pomodoro.elapsed;
-		else
-			tm = &g_ttymato_config->pomodoro.left;
-
-		g_ttymato_config->curses.digits[0] = tm->tm_min / 10;
-		g_ttymato_config->curses.digits[1] = tm->tm_min % 10;
-		g_ttymato_config->curses.digits[2] = tm->tm_sec / 10;
-		g_ttymato_config->curses.digits[3] = tm->tm_sec % 10;
-	}
-}
-
-void draw_number(int n, int x, int y)
-{
-	int i, sy = y;
-
-	for ( i = 0 ; i < 30; ++i, ++sy )
-	{
-		if ( sy == y + 6 )
-		{
-			sy = y;
-			++x;
-		}
-
-		wbkgdset(g_ttymato_config->curses.clockwin, COLOR_PAIR(numbers[n][i/2]));
-		mvwaddch(g_ttymato_config->curses.clockwin, x, sy, ' ');
-	}
-}
-
 void draw_clock(void)
 {
 	chtype       dotcolor = COLOR_PAIR(1);
@@ -160,10 +86,10 @@ void draw_clock(void)
 
 	/* Digits
 	 */
-	draw_number(g_ttymato_config->curses.digits[0], 2, 1);
-	draw_number(g_ttymato_config->curses.digits[1], 2, 8);
-	draw_number(g_ttymato_config->curses.digits[2], 2, 20);
-	draw_number(g_ttymato_config->curses.digits[3], 2, 27);
+	draw_number(&g_ttymato_config->curses, g_ttymato_config->curses.digits[0], 2, 1);
+	draw_number(&g_ttymato_config->curses, g_ttymato_config->curses.digits[1], 2, 8);
+	draw_number(&g_ttymato_config->curses, g_ttymato_config->curses.digits[2], 2, 20);
+	draw_number(&g_ttymato_config->curses, g_ttymato_config->curses.digits[3], 2, 27);
 
 	/* Blinking dots
 	 */
@@ -278,7 +204,7 @@ void process_keys(void)
 			break;
 
 		default:
-			sleep(g_ttymato_config->options.delay);
+			sleep(g_ttymato_config->delay);
 			break;
 	}
 }
@@ -286,7 +212,7 @@ void process_keys(void)
 void tick(void)
 {
 	tick_pomodoro(&g_ttymato_config->pomodoro, &g_ttymato_config->options);
-	update_time();
+	tick_ncurses(&g_ttymato_config->curses, &g_ttymato_config->pomodoro, &g_ttymato_config->options);
 	draw_clock();
 	draw_pomodoro();
 	process_keys();
@@ -409,7 +335,6 @@ int main(int argc, char **argv)
 
 	init_config();
 	parse_args(argc, argv);
-	init_curses();
 
 	while ( g_ttymato_config->running )
 		tick();
