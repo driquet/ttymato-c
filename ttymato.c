@@ -58,115 +58,12 @@ void signal_handler(int signal)
 	}
 }
 
-static inline const char * get_display_name(void)
-{
-	if ( g_ttymato_config->curses.display == TIME
-			|| g_ttymato_config->pomodoro.state == PAUSED )
-		return "Time";
-	else if ( g_ttymato_config->curses.display == LEFT )
-		return "Time left";
-	else if ( g_ttymato_config->curses.display == ELAPSED )
-		return "Elapsed time";
-	return "Undefined";
-}
-
 void cleanup(void)
 {
 	if ( g_ttymato_config )
 		free(g_ttymato_config);
 
 	endwin();
-}
-
-void draw_clock(void)
-{
-	chtype       dotcolor = COLOR_PAIR(1);
-
-	werase(g_ttymato_config->curses.clockwin);
-
-	/* Digits
-	 */
-	draw_number(&g_ttymato_config->curses, g_ttymato_config->curses.digits[0], 2, 1);
-	draw_number(&g_ttymato_config->curses, g_ttymato_config->curses.digits[1], 2, 8);
-	draw_number(&g_ttymato_config->curses, g_ttymato_config->curses.digits[2], 2, 20);
-	draw_number(&g_ttymato_config->curses, g_ttymato_config->curses.digits[3], 2, 27);
-
-	/* Blinking dots
-	 */
-	if ( g_ttymato_config->options.blink && time(NULL) % 2 == 0 )
-		dotcolor = COLOR_PAIR(2);
-
-	/* Dots
-	 */
-	wbkgdset(g_ttymato_config->curses.clockwin, dotcolor);
-	mvwaddstr(g_ttymato_config->curses.clockwin, 3, 16, "  ");
-	mvwaddstr(g_ttymato_config->curses.clockwin, 5, 16, "  ");
-
-	/* Display mode
-	 */
-	if ( g_ttymato_config->curses.display == TIME )
-		wbkgdset(g_ttymato_config->curses.clockwin, COLOR_PAIR(1));
-	else
-		wbkgdset(g_ttymato_config->curses.clockwin, COLOR_PAIR(0));
-	mvwaddstr(g_ttymato_config->curses.clockwin, 8, 1, "Time");
-
-
-	if ( g_ttymato_config->curses.display == ELAPSED )
-		wbkgdset(g_ttymato_config->curses.clockwin, COLOR_PAIR(1));
-	else
-		wbkgdset(g_ttymato_config->curses.clockwin, COLOR_PAIR(0));
-	mvwaddstr(g_ttymato_config->curses.clockwin, 8, CLOCKVIEW_WIDTH / 2 - 6 , "Elapsed time");
-
-	if ( g_ttymato_config->curses.display == LEFT)
-		wbkgdset(g_ttymato_config->curses.clockwin, COLOR_PAIR(1));
-	else
-		wbkgdset(g_ttymato_config->curses.clockwin, COLOR_PAIR(0));
-	mvwaddstr(g_ttymato_config->curses.clockwin, 8, CLOCKVIEW_WIDTH - 10 , "Time left");
-
-	wbkgdset(g_ttymato_config->curses.clockwin, COLOR_PAIR(0));
-	wrefresh(g_ttymato_config->curses.clockwin);
-}
-
-void draw_pomodoro(void)
-{
-	int i;
-	int line = 3;
-	char buffer[POMOVIEW_WIDTH - 4];
-	werase(g_ttymato_config->curses.pomowin);
-
-	/* separators
-	 */
-	wbkgdset(g_ttymato_config->curses.pomowin, COLOR_PAIR(0));
-	for ( i = 2 ; i < POMOVIEW_HEIGHT - 3; ++i )
-		mvwaddch(g_ttymato_config->curses.pomowin, i, 1, '|');
-
-	/* status
-	 */
-	if ( g_ttymato_config->pomodoro.state == POMODORI )
-		snprintf(buffer, sizeof(buffer), "Status : %s (%d/%d)", get_interval_name(&g_ttymato_config->pomodoro),
-				g_ttymato_config->pomodoro.current_pomodoro + 1, g_ttymato_config->pomodoro.pomodoro_number);
-	else
-		snprintf(buffer, sizeof(buffer), "Status : %s", get_interval_name(&g_ttymato_config->pomodoro));
-
-	mvwaddstr(g_ttymato_config->curses.pomowin, line++, 3, buffer);
-
-	/* time left
-	 */
-	if ( g_ttymato_config->curses.display == LEFT && g_ttymato_config->pomodoro.state != PAUSED )
-		strftime(buffer, sizeof(buffer), "Time   : %H:%M", &g_ttymato_config->pomodoro.time);
-	else
-		strftime(buffer, sizeof(buffer), "Left   : %M:%S", &g_ttymato_config->pomodoro.left);
-	mvwaddstr(g_ttymato_config->curses.pomowin, line++, 3, buffer);
-	
-	/* time elapsed
-	 */
-	if ( g_ttymato_config->curses.display == ELAPSED && g_ttymato_config->pomodoro.state != PAUSED )
-		strftime(buffer, sizeof(buffer), "Time   : %H:%M", &g_ttymato_config->pomodoro.time);
-	else
-		strftime(buffer, sizeof(buffer), "Elapsed: %M:%S", &g_ttymato_config->pomodoro.elapsed);
-	mvwaddstr(g_ttymato_config->curses.pomowin, line++, 3, buffer);
-
-	wrefresh(g_ttymato_config->curses.pomowin);
 }
 
 void process_keys(void)
@@ -213,8 +110,8 @@ void tick(void)
 {
 	tick_pomodoro(&g_ttymato_config->pomodoro, &g_ttymato_config->options);
 	tick_ncurses(&g_ttymato_config->curses, &g_ttymato_config->pomodoro, &g_ttymato_config->options);
-	draw_clock();
-	draw_pomodoro();
+	draw_ncurses(&g_ttymato_config->curses, &g_ttymato_config->pomodoro, &g_ttymato_config->options);
+
 	process_keys();
 }
 
