@@ -20,7 +20,7 @@ void init_pomodoro(ttymato_pomodoro_t *ctx)
 	/* Init pomodoro state
 	 */
 	ctx->state = PAUSED;
-	ctx->pomodoro_number = 0;
+	ctx->current_pomodoro = 0;
 
 	/* Init time related data
 	 */
@@ -116,12 +116,12 @@ void next_interval(ttymato_pomodoro_t *ctx)
 			break;
 
 		case LONGBREAK:
-			ctx->pomodoro_number = 0;
+			ctx->current_pomodoro = 0;
 			ctx->state = POMODORI;
 			break;
 
 		case BREAK:
-			ctx->pomodoro_number++;
+			ctx->current_pomodoro++;
 			ctx->state = POMODORI;
 			break;
 

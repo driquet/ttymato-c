@@ -17,10 +17,6 @@ void init_config(void)
 	 */
 	init_pomodoro(&g_ttymato_config->pomodoro);
 
-	/* Init ncurses
-	 */
-	init_ncurses(&g_ttymato_config->curses);
-
 	/* ttymato config
 	 */
 	g_ttymato_config->running = true;
@@ -229,9 +225,10 @@ int main(int argc, char **argv)
 	assert(g_ttymato_config != NULL);
 
 	atexit(cleanup);
-
 	init_config();
 	parse_args(argc, argv);
+	init_ncurses(&g_ttymato_config->curses);
+
 
 	while ( g_ttymato_config->running )
 		tick();
