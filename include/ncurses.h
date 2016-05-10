@@ -25,37 +25,26 @@
 
 /*!
  * \brief Initialize the ncurses context
- *
- * \param ctx ncurses context
  */
-void init_ncurses(ttymato_curses_t *ctx);
+void init_ncurses();
 
 /*!
  * \brief Update the ncurses (draw stuff)
- *
- * \param ctx ncurses context
- * \param pomodoro pomodoro context
- * \param options ttymato options
  */
-void tick_ncurses(ttymato_curses_t *ctx, ttymato_pomodoro_t *pomodoro, ttymato_options_t *options);
+void tick_ncurses();
 
 /*!
  * \brief Draw the ttymato using ncurses
- *
- * \param ctx ncurses context
- * \param pomodoro pomodoro context
- * \param options ttymato options
  */
-void draw_ncurses(ttymato_curses_t *ctx, ttymato_pomodoro_t *pomodoro, ttymato_options_t *options);
+void draw_ncurses();
 
 /*!
  * \brief Draw number
  *
- * \param ctx ncurses context
  * \param n number
  * \param x col
  * \param y line
  */
-void draw_number(ttymato_curses_t *ctx, int n, int x, int y);
+void draw_number(int n, int x, int y);
 
 #endif

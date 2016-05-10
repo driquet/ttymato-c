@@ -9,25 +9,22 @@
 #include "pomodoro.h"
 #include "utils.h"
 
-void init_pomodoro(ttymato_pomodoro_t *ctx)
+void init_pomodoro()
 {
 	/* Init ttymato options
 	 */
-	ctx->pomodoro_duration  = DEFAULT_DURATION_POMODORI;
-	ctx->pomodoro_number    = DEFAULT_NUMBER_POMODORI;
-	ctx->break_duration     = DEFAULT_DURATION_BREAK;
-	ctx->longbreak_duration = DEFAULT_DURATION_LONGBREAK;
+	g_pomodoro.pomodoro_duration  = DEFAULT_DURATION_POMODORI;
+	g_pomodoro.pomodoro_number    = DEFAULT_NUMBER_POMODORI;
+	g_pomodoro.break_duration     = DEFAULT_DURATION_BREAK;
+	g_pomodoro.longbreak_duration = DEFAULT_DURATION_LONGBREAK;
 
 	/* Init pomodoro state
 	 */
-	ctx->state = PAUSED;
-	ctx->current_pomodoro = 0;
-
-	/* Init time related data
-	 */
+	g_pomodoro.state = PAUSED;
+	g_pomodoro.current_pomodoro = 0;
 }
 
-void tick_pomodoro(ttymato_pomodoro_t *ctx, ttymato_options_t *options)
+void tick_pomodoro()
 {
 	time_t     lt, dt_elapsed, dt_left;
 
@@ -35,34 +32,34 @@ void tick_pomodoro(ttymato_pomodoro_t *ctx, ttymato_options_t *options)
 
 	/* Determine if the current interval is finished
 	 */
-	if ( ctx->state != PAUSED
-			&& ctx->state != POMODORI_END )
+	if ( g_pomodoro.state != PAUSED
+			&& g_pomodoro.state != POMODORI_END )
 	{
-		if ( lt > ctx->interval_end )
+		if ( lt > g_pomodoro.interval_end )
 		{
-			if ( options->notify )
+			if ( g_options.notify )
 			{
 				char message[100];
-				snprintf(message, sizeof(message), "%s end", get_interval_name(ctx));
+				snprintf(message, sizeof(message), "%s end", get_interval_name(g_pomodoro.state));
 				notify(NOTIFY_URGENCY_NORMAL, 30000, "ttymato", message);
 			}
 
-			if ( options->autostart )
+			if ( g_options.autostart )
 			{
-				next_interval(ctx);
+				next_interval();
 				return;
 			}
 			else
 			{
-				if ( ctx->state == POMODORI )
-					ctx->state = POMODORI_END;
+				if ( g_pomodoro.state == POMODORI )
+					g_pomodoro.state = POMODORI_END;
 				else
-					ctx->state = PAUSED;
-				ctx->interval_pause = lt;
-				ctx->interval_start = lt;
-				ctx->interval_end   = lt;
+					g_pomodoro.state = PAUSED;
+				g_pomodoro.interval_pause = lt;
+				g_pomodoro.interval_start = lt;
+				g_pomodoro.interval_end   = lt;
 
-				if ( options->urgent )
+				if ( g_options.urgent )
 				{
 					urgent_bell();
 				}
@@ -72,22 +69,22 @@ void tick_pomodoro(ttymato_pomodoro_t *ctx, ttymato_options_t *options)
 
 	/* Update time related data
 	 */
-	localtime_r(&lt, &ctx->time);
+	localtime_r(&lt, &g_pomodoro.time);
 
 	/* Update elapsed time, and left time
 	 */
-	switch ( ctx->state )
+	switch ( g_pomodoro.state )
 	{
 		case POMODORI:
 		case BREAK:
 		case LONGBREAK:
-			dt_elapsed = lt - ctx->interval_start;
-			dt_left    = ctx->interval_end - lt;
+			dt_elapsed = lt - g_pomodoro.interval_start;
+			dt_left    = g_pomodoro.interval_end - lt;
 			break;
 
 		case PAUSED:
-			dt_elapsed = ctx->interval_pause - ctx->interval_start;
-			dt_left    = ctx->interval_end - ctx->interval_pause;
+			dt_elapsed = g_pomodoro.interval_pause - g_pomodoro.interval_start;
+			dt_left    = g_pomodoro.interval_end - g_pomodoro.interval_pause;
 			break;
 
 		case POMODORI_END:
@@ -96,91 +93,91 @@ void tick_pomodoro(ttymato_pomodoro_t *ctx, ttymato_options_t *options)
 			break;
 	}
 
-	gmtime_r(&dt_elapsed, &ctx->elapsed);
-	gmtime_r(&dt_left, &ctx->left);
+	gmtime_r(&dt_elapsed, &g_pomodoro.elapsed);
+	gmtime_r(&dt_left, &g_pomodoro.left);
 }
 
-void next_interval(ttymato_pomodoro_t *ctx)
+void next_interval()
 {
-	switch ( ctx->state )
+	switch ( g_pomodoro.state )
 	{
 		case PAUSED:
-			ctx->state = POMODORI;
+			g_pomodoro.state = POMODORI;
 			break;
 
 		case POMODORI:
 		case POMODORI_END:
-			if ( ctx->current_pomodoro == ctx->pomodoro_number - 1)
-				ctx->state = LONGBREAK;
+			if ( g_pomodoro.current_pomodoro == g_pomodoro.pomodoro_number - 1)
+				g_pomodoro.state = LONGBREAK;
 			else
-				ctx->state = BREAK;
+				g_pomodoro.state = BREAK;
 			break;
 
 		case LONGBREAK:
-			ctx->current_pomodoro = 0;
-			ctx->state = POMODORI;
+			g_pomodoro.current_pomodoro = 0;
+			g_pomodoro.state = POMODORI;
 			break;
 
 		case BREAK:
-			ctx->current_pomodoro++;
-			ctx->state = POMODORI;
+			g_pomodoro.current_pomodoro++;
+			g_pomodoro.state = POMODORI;
 			break;
 
 	}
 
-	ctx->interval_start = time(NULL);
-	ctx->interval_end   = ctx->interval_start + get_interval_duration(ctx, ctx->state);
+	g_pomodoro.interval_start = time(NULL);
+	g_pomodoro.interval_end   = g_pomodoro.interval_start + get_interval_duration(g_pomodoro.state);
 }
 
-void toggle_pomodoro_state(ttymato_pomodoro_t *ctx)
+void toggle_pomodoro_state()
 {
-	if ( ctx->state == POMODORI_END )
+	if ( g_pomodoro.state == POMODORI_END )
 		return;
 
-	if ( ctx->state == PAUSED )
+	if ( g_pomodoro.state == PAUSED )
 	{
-		if ( ctx->last_state == PAUSED )
+		if ( g_pomodoro.last_state == PAUSED )
 		{
-			ctx->state = POMODORI;
-			ctx->interval_start = time(NULL);
-			ctx->interval_end   = ctx->interval_start + get_interval_duration(ctx, ctx->state);
+			g_pomodoro.state = POMODORI;
+			g_pomodoro.interval_start = time(NULL);
+			g_pomodoro.interval_end   = g_pomodoro.interval_start + get_interval_duration(g_pomodoro.state);
 		}
 		else
 		{
-			time_t delta = time(NULL) - ctx->interval_pause;
-			ctx->state = ctx->last_state;
-			ctx->interval_start += delta;
-			ctx->interval_end   += delta;
+			time_t delta = time(NULL) - g_pomodoro.interval_pause;
+			g_pomodoro.state = g_pomodoro.last_state;
+			g_pomodoro.interval_start += delta;
+			g_pomodoro.interval_end   += delta;
 		}
 	}
 	else
 	{
-		ctx->last_state     = ctx->state;
-		ctx->state          = PAUSED;
-		ctx->interval_pause = time(NULL);
+		g_pomodoro.last_state     = g_pomodoro.state;
+		g_pomodoro.state          = PAUSED;
+		g_pomodoro.interval_pause = time(NULL);
 	}
 }
 
-int get_interval_duration(ttymato_pomodoro_t *ctx, pomodoro_state_t state)
+int get_interval_duration(pomodoro_state_t state)
 {
 	if ( state == POMODORI )
-		return ctx->pomodoro_duration;
+		return g_pomodoro.pomodoro_duration;
 	else if ( state == BREAK )
-		return ctx->break_duration;
+		return g_pomodoro.break_duration;
 	else if ( state == LONGBREAK )
-		return ctx->longbreak_duration;
+		return g_pomodoro.longbreak_duration;
 	return 0;
 }
 
-const char * get_interval_name(ttymato_pomodoro_t *ctx)
+const char * get_interval_name(pomodoro_state_t state)
 {
-	if ( ctx->state == POMODORI )
+	if ( state == POMODORI )
 		return "Pomodori";
-	else if ( ctx->state == POMODORI_END )
+	else if ( state == POMODORI_END )
 		return "Pomodori ended";
-	else if ( ctx->state == BREAK )
+	else if ( state == BREAK )
 		return "Break";
-	else if ( ctx->state == LONGBREAK )
+	else if ( state == LONGBREAK )
 		return "Long break";
 	return "Paused";
 }

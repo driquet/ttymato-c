@@ -72,4 +72,10 @@ typedef struct {
 	ttymato_curses_t    curses;
 } ttymato_context_t;
 
+ttymato_context_t  *g_ttymato_context;
+#define g_ctx      (g_ttymato_context)
+#define g_pomodoro (g_ttymato_context->pomodoro)
+#define g_ncurses  (g_ttymato_context->curses)
+#define g_options  (g_ttymato_context->options)
+
 #endif

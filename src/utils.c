@@ -24,4 +24,3 @@ void notify(NotifyUrgency urgency, unsigned int expire, const char *summary, con
 	g_object_unref(G_OBJECT(n));
 	notify_uninit();
 }
-

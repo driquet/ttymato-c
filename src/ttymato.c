@@ -16,8 +16,6 @@
 #include "ncurses.h"
 #include "utils.h"
 
-static ttymato_context_t *g_ctx;
-
 void signal_handler(int signal)
 {
 	switch(signal)
@@ -46,7 +44,7 @@ void init_config(void)
 
 	/* Init pomodoro
 	 */
-	init_pomodoro(&g_ctx->pomodoro);
+	init_pomodoro(g_ctx);
 
 	/* ttymato config
 	 */
@@ -79,7 +77,7 @@ void process_keys(void)
 		case 'P':
 			/* Pause/Unpause
 			 */
-			toggle_pomodoro_state(&g_ctx->pomodoro);
+			toggle_pomodoro_state(g_ctx);
 			break;
 
 		case 'q':
@@ -102,7 +100,7 @@ void process_keys(void)
 		case 'N':
 			/* Next interval
 			 */
-			next_interval(&g_ctx->pomodoro);
+			next_interval(g_ctx);
 			break;
 
 		default:
@@ -113,7 +111,7 @@ void process_keys(void)
 
 void tick(void)
 {
-	tick_pomodoro(&g_ctx->pomodoro, &g_ctx->options);
+	tick_pomodoro(g_ctx);
 	tick_ncurses(&g_ctx->curses, &g_ctx->pomodoro, &g_ctx->options);
 	draw_ncurses(&g_ctx->curses, &g_ctx->pomodoro, &g_ctx->options);
 
@@ -236,7 +234,7 @@ int main(int argc, char **argv)
 	atexit(cleanup);
 	init_config();
 	parse_args(argc, argv);
-	init_ncurses(&g_ctx->curses);
+	init_ncurses();
 
 
 	while ( g_ctx->running )

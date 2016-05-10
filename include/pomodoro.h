@@ -18,50 +18,39 @@
 
 /*!
  * \brief Initialize the pomodoro context
- *
- * \param ctx pomodoro context
  */
-void init_pomodoro(ttymato_pomodoro_t *ctx);
+void init_pomodoro();
 
 /*!
  * \brief Update the pomodoro data
- *
- * \param ctx pomodoro context
- * \param options ttymato options
- *
  */
-void tick_pomodoro(ttymato_pomodoro_t *ctx, ttymato_options_t *options);
+void tick_pomodoro();
 
 /*!
  * \brief Update context and go to the next interval
- *
- * \param ctx pomodoro context
  */
-void next_interval(ttymato_pomodoro_t *ctx);
+void next_interval();
 
 /*!
  * \brief Pause/Resume interval
- *
- * \param ctx pomodoro context
  */
-void toggle_pomodoro_state(ttymato_pomodoro_t *ctx);
+void toggle_pomodoro_state();
 
 
 /*!
  * \brief Return the duration of an interval
  *
- * \param ctx pomodoro context
  * \param state interval state
  */
-int get_interval_duration(ttymato_pomodoro_t *ctx, pomodoro_state_t state);
+int get_interval_duration(pomodoro_state_t state);
 
 /*!
  * \brief Return current interval name
  *
- * \param ctx pomodoro context
+ * \param state interval state
  *
  * \return name of the current interval
  */
-const char * get_interval_name(ttymato_pomodoro_t *ctx);
+const char * get_interval_name(pomodoro_state_t state);
 
 #endif

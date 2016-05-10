@@ -26,7 +26,7 @@ const bool numbers[][15] =
 };
 
 
-void init_ncurses(ttymato_curses_t *ctx)
+void init_ncurses()
 {
 	initscr();
 	cbreak();
@@ -37,14 +37,14 @@ void init_ncurses(ttymato_curses_t *ctx)
 	clear();
 	refresh();
 
-	ctx->clockwin = newwin(
+	g_ncurses.clockwin = newwin(
 			CLOCKVIEW_HEIGHT,
 			CLOCKVIEW_WIDTH,
 			LINES / 2 - CLOCKVIEW_HEIGHT / 2,
 			COLS / 2 - TOTAL_WIDTH / 2
 		);
 
-	ctx->pomowin = newwin(
+	g_ncurses.pomowin = newwin(
 			POMOVIEW_HEIGHT,
 			POMOVIEW_WIDTH,
 			LINES / 2 - CLOCKVIEW_HEIGHT / 2,
@@ -53,7 +53,7 @@ void init_ncurses(ttymato_curses_t *ctx)
 
 
 	nodelay(stdscr, true);
-	wrefresh(ctx->clockwin);
+	wrefresh(g_ncurses.clockwin);
 
 	/* Init colors
 	 */
@@ -63,34 +63,34 @@ void init_ncurses(ttymato_curses_t *ctx)
 	refresh();
 }
 
-void tick_ncurses(ttymato_curses_t *ctx, ttymato_pomodoro_t *pomodoro, ttymato_options_t *options)
+void tick_ncurses()
 {
 	struct tm  *tm;
 
 	/* Select the numbers to display in the clock
 	 */
-	if ( ctx->display == TIME || pomodoro->state == PAUSED )
+	if ( g_ncurses.display == TIME || g_pomodoro.state == PAUSED )
 	{
-		ctx->digits[0] = pomodoro->time.tm_hour / 10;
-		ctx->digits[1] = pomodoro->time.tm_hour % 10;
-		ctx->digits[2] = pomodoro->time.tm_min  / 10;
-		ctx->digits[3] = pomodoro->time.tm_min  % 10;
+		g_ncurses.digits[0] = g_pomodoro.time.tm_hour / 10;
+		g_ncurses.digits[1] = g_pomodoro.time.tm_hour % 10;
+		g_ncurses.digits[2] = g_pomodoro.time.tm_min  / 10;
+		g_ncurses.digits[3] = g_pomodoro.time.tm_min  % 10;
 	}
 	else
 	{
-		if ( ctx->display == ELAPSED )
-			tm = &pomodoro->elapsed;
+		if ( g_ncurses.display == ELAPSED )
+			tm = &g_pomodoro.elapsed;
 		else
-			tm = &pomodoro->left;
+			tm = &g_pomodoro.left;
 
-		ctx->digits[0] = tm->tm_min / 10;
-		ctx->digits[1] = tm->tm_min % 10;
-		ctx->digits[2] = tm->tm_sec / 10;
-		ctx->digits[3] = tm->tm_sec % 10;
+		g_ncurses.digits[0] = tm->tm_min / 10;
+		g_ncurses.digits[1] = tm->tm_min % 10;
+		g_ncurses.digits[2] = tm->tm_sec / 10;
+		g_ncurses.digits[3] = tm->tm_sec % 10;
 	}
 }
 
-void draw_clock(ttymato_curses_t *ctx, ttymato_pomodoro_t *pomodoro, ttymato_options_t *options)
+void draw_clock()
 {
 	chtype                    dotcolor = COLOR_PAIR(1);
 	int                       total_len, str_col_start;
@@ -98,104 +98,105 @@ void draw_clock(ttymato_curses_t *ctx, ttymato_pomodoro_t *pomodoro, ttymato_opt
 
 	/* Cleaning window
 	 */
-	werase(ctx->clockwin);
+	werase(g_ncurses.clockwin);
 
 	/* Digits
 	 */
-	draw_number(ctx, ctx->digits[0], 2, 1);
-	draw_number(ctx, ctx->digits[1], 2, 8);
-	draw_number(ctx, ctx->digits[2], 2, 20);
-	draw_number(ctx, ctx->digits[3], 2, 27);
+	draw_number(g_ncurses.digits[0], 2, 1);
+	draw_number(g_ncurses.digits[1], 2, 8);
+	draw_number(g_ncurses.digits[2], 2, 20);
+	draw_number(g_ncurses.digits[3], 2, 27);
 
 	/* Blinking dots
 	 */
-	if ( options->blink && time(NULL) % 2 == 0 )
+	if ( g_options.blink && time(NULL) % 2 == 0 )
 		dotcolor = COLOR_PAIR(2);
 
 	/* Dots
 	 */
-	wbkgdset(ctx->clockwin, dotcolor);
-	mvwaddstr(ctx->clockwin, 3, 16, "  ");
-	mvwaddstr(ctx->clockwin, 5, 16, "  ");
+	wbkgdset(g_ncurses.clockwin, dotcolor);
+	mvwaddstr(g_ncurses.clockwin, 3, 16, "  ");
+	mvwaddstr(g_ncurses.clockwin, 5, 16, "  ");
 
 	/* Display mode
 	 */
 	total_len     = strlen(TIME_STR) + strlen(ELAPSED_STR) + strlen(LEFT_STR) + 2 * 3;
 	str_col_start = CLOCKVIEW_WIDTH / 2 - total_len / 2;
-	state = ctx->display == TIME || pomodoro->state == PAUSED ? TIME : ctx->display;
+	state = g_ncurses.display == TIME || g_pomodoro.state == PAUSED ? TIME : g_ncurses.display;
 
 	if ( state == TIME )
-		wbkgdset(ctx->clockwin, COLOR_PAIR(1));
+		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(1));
 	else
-		wbkgdset(ctx->clockwin, COLOR_PAIR(0));
-	mvwaddstr(ctx->clockwin, 8, str_col_start, TIME_STR);
+		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(0));
+	mvwaddstr(g_ncurses.clockwin, 8, str_col_start, TIME_STR);
 
 
 	if ( state == ELAPSED )
-		wbkgdset(ctx->clockwin, COLOR_PAIR(1));
+		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(1));
 	else
-		wbkgdset(ctx->clockwin, COLOR_PAIR(0));
-	mvwaddstr(ctx->clockwin, 8, str_col_start + strlen(TIME_STR) + SPACING , ELAPSED_STR);
+		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(0));
+	mvwaddstr(g_ncurses.clockwin, 8, str_col_start + strlen(TIME_STR) + SPACING , ELAPSED_STR);
 
 	if ( state == LEFT)
-		wbkgdset(ctx->clockwin, COLOR_PAIR(1));
+		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(1));
 	else
-		wbkgdset(ctx->clockwin, COLOR_PAIR(0));
-	mvwaddstr(ctx->clockwin, 8, str_col_start + strlen(TIME_STR) + strlen(ELAPSED_STR) + 2 * SPACING, LEFT_STR);
+		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(0));
+	mvwaddstr(g_ncurses.clockwin, 8, str_col_start + strlen(TIME_STR) + strlen(ELAPSED_STR) + 2 * SPACING, LEFT_STR);
 
-	wbkgdset(ctx->clockwin, COLOR_PAIR(0));
-	wrefresh(ctx->clockwin);
+	wbkgdset(g_ncurses.clockwin, COLOR_PAIR(0));
+	wrefresh(g_ncurses.clockwin);
 }
 
-void draw_ncurses(ttymato_curses_t *ctx, ttymato_pomodoro_t *pomodoro, ttymato_options_t *options)
+void draw_pomodoro()
 {
 	int          i;
 	int          line = 3;
 	char         buffer[POMOVIEW_WIDTH - 4];
 
-
-	draw_clock(ctx, pomodoro, options);
-
-	/* ------------ POMODORO VIEW --------------
-	 */
-	werase(ctx->pomowin);
+	werase(g_ncurses.pomowin);
 
 	/* separators
 	 */
-	wbkgdset(ctx->pomowin, COLOR_PAIR(0));
+	wbkgdset(g_ncurses.pomowin, COLOR_PAIR(0));
 	for ( i = 2 ; i < POMOVIEW_HEIGHT - 3; ++i )
-		mvwaddch(ctx->pomowin, i, 1, '|');
+		mvwaddch(g_ncurses.pomowin, i, 1, '|');
 
 	/* status
 	 */
-	if ( pomodoro->state == POMODORI )
-		snprintf(buffer, sizeof(buffer), "Status : %s (%d/%d)", get_interval_name(pomodoro),
-				pomodoro->current_pomodoro + 1, pomodoro->pomodoro_number);
+	if ( g_pomodoro.state == POMODORI )
+		snprintf(buffer, sizeof(buffer), "Status : %s (%d/%d)", get_interval_name(g_pomodoro.state),
+				g_pomodoro.current_pomodoro + 1, g_pomodoro.pomodoro_number);
 	else
-		snprintf(buffer, sizeof(buffer), "Status : %s", get_interval_name(pomodoro));
+		snprintf(buffer, sizeof(buffer), "Status : %s", get_interval_name(g_pomodoro.state));
 
-	mvwaddstr(ctx->pomowin, line++, 3, buffer);
+	mvwaddstr(g_ncurses.pomowin, line++, 3, buffer);
 
 	/* time left
 	 */
-	if ( ctx->display == LEFT && pomodoro->state != PAUSED )
-		strftime(buffer, sizeof(buffer), "Time   : %H:%M", &pomodoro->time);
+	if ( g_ncurses.display == LEFT && g_pomodoro.state != PAUSED )
+		strftime(buffer, sizeof(buffer), "Time   : %H:%M", &g_pomodoro.time);
 	else
-		strftime(buffer, sizeof(buffer), "Left   : %M:%S", &pomodoro->left);
-	mvwaddstr(ctx->pomowin, line++, 3, buffer);
+		strftime(buffer, sizeof(buffer), "Left   : %M:%S", &g_pomodoro.left);
+	mvwaddstr(g_ncurses.pomowin, line++, 3, buffer);
 	
 	/* time elapsed
 	 */
-	if ( ctx->display == ELAPSED && pomodoro->state != PAUSED )
-		strftime(buffer, sizeof(buffer), "Time   : %H:%M", &pomodoro->time);
+	if ( g_ncurses.display == ELAPSED && g_pomodoro.state != PAUSED )
+		strftime(buffer, sizeof(buffer), "Time   : %H:%M", &g_pomodoro.time);
 	else
-		strftime(buffer, sizeof(buffer), "Elapsed: %M:%S", &pomodoro->elapsed);
-	mvwaddstr(ctx->pomowin, line++, 3, buffer);
+		strftime(buffer, sizeof(buffer), "Elapsed: %M:%S", &g_pomodoro.elapsed);
+	mvwaddstr(g_ncurses.pomowin, line++, 3, buffer);
 
-	wrefresh(ctx->pomowin);
+	wrefresh(g_ncurses.pomowin);
 }
 
-void draw_number(ttymato_curses_t *ctx, int n, int x, int y)
+void draw_ncurses()
+{
+	draw_clock();
+	draw_pomodoro();
+}
+
+void draw_number(int n, int x, int y)
 {
 	int i, sy = y;
 
@@ -207,7 +208,7 @@ void draw_number(ttymato_curses_t *ctx, int n, int x, int y)
 			++x;
 		}
 
-		wbkgdset(ctx->clockwin, COLOR_PAIR(numbers[n][i/2]));
-		mvwaddch(ctx->clockwin, x, sy, ' ');
+		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(numbers[n][i/2]));
+		mvwaddch(g_ncurses.clockwin, x, sy, ' ');
 	}
 }
