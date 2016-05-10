@@ -9,7 +9,7 @@
 #ifndef __NCURSES_H__
 #define __NCURSES_H__
 
-#include <ncurses.h>
+#include <curses.h>
 #include "pomodoro.h"
 
 #define CLOCKVIEW_WIDTH  35
