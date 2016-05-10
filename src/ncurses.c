@@ -6,7 +6,9 @@
  *   See LICENCE file.
  */
 
+#include <string.h>
 #include "ncurses.h"
+#include "pomodoro.h"
 
 /* Number matrix */
 const bool numbers[][15] =

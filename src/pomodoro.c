@@ -7,6 +7,7 @@
  */
 
 #include "pomodoro.h"
+#include "utils.h"
 
 void init_pomodoro(ttymato_pomodoro_t *ctx)
 {

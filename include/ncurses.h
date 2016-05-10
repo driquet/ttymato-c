@@ -9,8 +9,7 @@
 #ifndef __NCURSES_H__
 #define __NCURSES_H__
 
-#include <curses.h>
-#include "pomodoro.h"
+#include "context.h"
 
 #define CLOCKVIEW_WIDTH  35
 #define CLOCKVIEW_HEIGHT 10
@@ -19,20 +18,10 @@
 #define TOTAL_WIDTH (CLOCKVIEW_WIDTH + POMOVIEW_WIDTH)
 #define TOTAL_HEIGHT (CLOCKVIEW_HEIGHT + POMOVIEW_HEIGHT)
 
-typedef enum { TIME, ELAPSED, LEFT } pomodoro_clock_display_t;
 #define TIME_STR     "Time"
 #define ELAPSED_STR  "Elapsed"
 #define LEFT_STR     "Left"
 #define SPACING      2
-
-typedef struct
-{
-	WINDOW                    *clockwin;
-	WINDOW                    *pomowin;
-	pomodoro_clock_display_t  display;
-	unsigned int              digits[4];
-} ttymato_curses_t;
-
 
 /*!
  * \brief Initialize the ncurses context

@@ -6,8 +6,39 @@
  *   See LICENCE file.
  */
 
-#include "ttymato.h"
+#include <assert.h>
+#include <getopt.h>
+#include <signal.h>
+#include <string.h>
+
+#include "context.h"
+#include "pomodoro.h"
+#include "ncurses.h"
 #include "utils.h"
+
+static ttymato_context_t *g_ctx;
+
+void signal_handler(int signal)
+{
+	switch(signal)
+	{
+		case SIGWINCH:
+			endwin();
+			init_ncurses(&g_ctx->curses);
+			break;
+			/* Interruption signal */
+		case SIGINT:
+		case SIGTERM:
+			g_ctx->running = false;
+			/* Segmentation fault signal */
+			break;
+		case SIGSEGV:
+			endwin();
+			fprintf(stderr, "Segmentation fault.\n");
+			exit(EXIT_FAILURE);
+			break;
+	}
+}
 
 void init_config(void)
 {
@@ -15,12 +46,12 @@ void init_config(void)
 
 	/* Init pomodoro
 	 */
-	init_pomodoro(&g_ttymato_config->pomodoro);
+	init_pomodoro(&g_ctx->pomodoro);
 
 	/* ttymato config
 	 */
-	g_ttymato_config->running = true;
-	g_ttymato_config->delay   = DEFAULT_DELAY;
+	g_ctx->running = true;
+	g_ctx->delay   = DEFAULT_DELAY;
 
 	/* Init signals
 	 */
@@ -32,32 +63,10 @@ void init_config(void)
 	sigaction(SIGSEGV,  &sig, NULL);
 }
 
-void signal_handler(int signal)
-{
-	switch(signal)
-	{
-		case SIGWINCH:
-			endwin();
-			init_ncurses(&g_ttymato_config->curses);
-			break;
-			/* Interruption signal */
-		case SIGINT:
-		case SIGTERM:
-			g_ttymato_config->running = false;
-			/* Segmentation fault signal */
-			break;
-		case SIGSEGV:
-			endwin();
-			fprintf(stderr, "Segmentation fault.\n");
-			exit(EXIT_FAILURE);
-			break;
-	}
-}
-
 void cleanup(void)
 {
-	if ( g_ttymato_config )
-		free(g_ttymato_config);
+	if ( g_ctx )
+		free(g_ctx);
 
 	endwin();
 }
@@ -70,15 +79,15 @@ void process_keys(void)
 		case 'P':
 			/* Pause/Unpause
 			 */
-			toggle_pomodoro_state(&g_ttymato_config->pomodoro);
+			toggle_pomodoro_state(&g_ctx->pomodoro);
 			break;
 
 		case 'q':
 		case 'Q':
 			/* Quit
 			 */
-			if ( !g_ttymato_config->options.noquit )
-				g_ttymato_config->running = false;
+			if ( !g_ctx->options.noquit )
+				g_ctx->running = false;
 			break;
 
 
@@ -86,27 +95,27 @@ void process_keys(void)
 		case 'S':
 			/* Switch time display
 			 */
-			g_ttymato_config->curses.display = (g_ttymato_config->curses.display + 1) % (LEFT + 1);
+			g_ctx->curses.display = (g_ctx->curses.display + 1) % (LEFT + 1);
 			break;
 
 		case 'n':
 		case 'N':
 			/* Next interval
 			 */
-			next_interval(&g_ttymato_config->pomodoro);
+			next_interval(&g_ctx->pomodoro);
 			break;
 
 		default:
-			sleep(g_ttymato_config->delay);
+			sleep(g_ctx->delay);
 			break;
 	}
 }
 
 void tick(void)
 {
-	tick_pomodoro(&g_ttymato_config->pomodoro, &g_ttymato_config->options);
-	tick_ncurses(&g_ttymato_config->curses, &g_ttymato_config->pomodoro, &g_ttymato_config->options);
-	draw_ncurses(&g_ttymato_config->curses, &g_ttymato_config->pomodoro, &g_ttymato_config->options);
+	tick_pomodoro(&g_ctx->pomodoro, &g_ctx->options);
+	tick_ncurses(&g_ctx->curses, &g_ctx->pomodoro, &g_ctx->options);
+	draw_ncurses(&g_ctx->curses, &g_ctx->pomodoro, &g_ctx->options);
 
 	process_keys();
 }
@@ -153,19 +162,19 @@ void parse_args(int argc, char **argv)
 			break;
 
 			case 'u':
-			g_ttymato_config->options.urgent = true;
+			g_ctx->options.urgent = true;
 			break;
 
 			case 'n':
-			g_ttymato_config->options.notify = true;
+			g_ctx->options.notify = true;
 			break;
 
 			case 'N':
-			g_ttymato_config->options.noquit = true;
+			g_ctx->options.noquit = true;
 			break;
 
 			case 'b':
-			g_ttymato_config->options.blink = true;
+			g_ctx->options.blink = true;
 			break;
 
 			case 'D':
@@ -174,30 +183,30 @@ void parse_args(int argc, char **argv)
 
 				/* Pomodori duration
 				 */
-				if ( !parse_next_int(values, ",", 0, 60, &g_ttymato_config->pomodoro.pomodoro_duration) )
+				if ( !parse_next_int(values, ",", 0, 60, &g_ctx->pomodoro.pomodoro_duration) )
 				{
 						fprintf(stderr, "Error while parsing pomodori duration\n");
 						goto duration_end;
 				}
-				g_ttymato_config->pomodoro.pomodoro_duration *= 60;
+				g_ctx->pomodoro.pomodoro_duration *= 60;
 
 				/* Break duration
 				 */
-				if ( !parse_next_int(NULL, ",", 0, 60, &g_ttymato_config->pomodoro.break_duration) )
+				if ( !parse_next_int(NULL, ",", 0, 60, &g_ctx->pomodoro.break_duration) )
 				{
 						fprintf(stderr, "Error while parsing break duration\n");
 						goto duration_end;
 				}
-				g_ttymato_config->pomodoro.break_duration *= 60;
+				g_ctx->pomodoro.break_duration *= 60;
 
 				/* Longbreak duration
 				 */
-				if ( !parse_next_int(NULL, ",", 0, 60, &g_ttymato_config->pomodoro.longbreak_duration) )
+				if ( !parse_next_int(NULL, ",", 0, 60, &g_ctx->pomodoro.longbreak_duration) )
 				{
 						fprintf(stderr, "Error while parsing longbreak duration\n");
 						goto duration_end;
 				}
-				g_ttymato_config->pomodoro.longbreak_duration *= 60;
+				g_ctx->pomodoro.longbreak_duration *= 60;
 
 				free(values);
 				break;
@@ -210,7 +219,7 @@ duration_end:
 
 			case 'p':
 			if ( atoi(optarg) > 0 )
-				g_ttymato_config->pomodoro.pomodoro_number = atoi(optarg);
+				g_ctx->pomodoro.pomodoro_number = atoi(optarg);
 			break;
 		}
 	}
@@ -221,16 +230,16 @@ int main(int argc, char **argv)
 {
 	/* Allocate ttymato config
 	 */
-	g_ttymato_config = calloc(1, sizeof(ttymato_config_t));
-	assert(g_ttymato_config != NULL);
+	g_ctx = calloc(1, sizeof(ttymato_context_t));
+	assert(g_ctx != NULL);
 
 	atexit(cleanup);
 	init_config();
 	parse_args(argc, argv);
-	init_ncurses(&g_ttymato_config->curses);
+	init_ncurses(&g_ctx->curses);
 
 
-	while ( g_ttymato_config->running )
+	while ( g_ctx->running )
 		tick();
 
 	return 0;
