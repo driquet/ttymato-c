@@ -13,12 +13,12 @@
 #include <stdlib.h>
 #include <libnotify/notify.h>
 
-/*
+/*!
  * \brief Generate a urgent bell to get the attention of the user
  */
 void urgent_bell(void);
 
-/*
+/*!
  * \brief Create a notification using notify-send command
  * \param urgency urgency level (low, normal, critical)
  * \param expire timeout in milliseconds
