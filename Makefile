@@ -8,7 +8,7 @@ OBJ = $(patsubst %.c,%.o,$(SRC))
 CC  = gcc
 BIN = ttymato
 LDFLAGS = -lncurses -lnotify `pkg-config --libs --cflags glib-2.0 gtk+-2.0`
-CFLAGS  = -Wall -g -Iinclude `pkg-config --cflags --libs libnotify`
+CFLAGS  = -Wall -Werror -g -Iinclude `pkg-config --cflags --libs libnotify`
 
 all: ${BIN}
 

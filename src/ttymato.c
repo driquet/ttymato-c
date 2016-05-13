@@ -32,7 +32,7 @@ void signal_handler(int signal)
 			break;
 		case SIGSEGV:
 			endwin();
-			fprintf(stderr, "Segmentation fault.\n");
+			DEBUG("Segmentation fault");
 			exit(EXIT_FAILURE);
 			break;
 	}
@@ -120,8 +120,9 @@ void tick(void)
 
 void usage(void)
 {
-	printf("usage: ttymato [-hunbN] [-D <pomodoro>,<break>,<longbreak>] [-p number] \n"
+	printf("usage: ttymato [-hunbN] [-c <config>] [-D <pomodoro>,<break>,<longbreak>] [-p number] \n"
 		"\t -h \t Print this help                                        \n"
+		"\t -c \t Path to configuration file                             \n"
 		"\t -u \t Urgent bell on intervals end                           \n"
 		"\t -n \t Notification on intervals end                          \n"
 		"\t -N \t Don't quit on keypress                                 \n"
@@ -149,7 +150,7 @@ void parse_args(int argc, char **argv)
 {
 	int c;
 
-	while ( (c = getopt(argc, argv, "hunbND:p:")) != -1 )
+	while ( (c = getopt(argc, argv, "hunbND:p:c:")) != -1 )
 	{
 		switch (c)
 		{
@@ -183,28 +184,28 @@ void parse_args(int argc, char **argv)
 				 */
 				if ( !parse_next_int(values, ",", 0, 60, &g_ctx->pomodoro.pomodoro_duration) )
 				{
-						fprintf(stderr, "Error while parsing pomodori duration\n");
+						DEBUG("Error while parsing pomodori duration");
 						goto duration_end;
 				}
-				g_ctx->pomodoro.pomodoro_duration *= 60;
+				g_pomodoro.pomodoro_duration *= 60;
 
 				/* Break duration
 				 */
 				if ( !parse_next_int(NULL, ",", 0, 60, &g_ctx->pomodoro.break_duration) )
 				{
-						fprintf(stderr, "Error while parsing break duration\n");
+						DEBUG("Error while parsing break duration");
 						goto duration_end;
 				}
-				g_ctx->pomodoro.break_duration *= 60;
+				g_pomodoro.break_duration *= 60;
 
 				/* Longbreak duration
 				 */
 				if ( !parse_next_int(NULL, ",", 0, 60, &g_ctx->pomodoro.longbreak_duration) )
 				{
-						fprintf(stderr, "Error while parsing longbreak duration\n");
+						DEBUG("Error while parsing longbreak duration");
 						goto duration_end;
 				}
-				g_ctx->pomodoro.longbreak_duration *= 60;
+				g_pomodoro.longbreak_duration *= 60;
 
 				free(values);
 				break;
@@ -217,7 +218,11 @@ duration_end:
 
 			case 'p':
 			if ( atoi(optarg) > 0 )
-				g_ctx->pomodoro.pomodoro_number = atoi(optarg);
+				g_pomodoro.pomodoro_number = atoi(optarg);
+			break;
+
+			case 'c':
+			strncpy(g_ctx->config, optarg, sizeof(g_ctx->config));
 			break;
 		}
 	}
@@ -233,9 +238,11 @@ int main(int argc, char **argv)
 
 	atexit(cleanup);
 	init_config();
-	parse_args(argc, argv);
-	init_ncurses();
 
+	parse_args(argc, argv);
+	if ( load_config(g_ctx->config) != E_PARSE_OK )
+		DEBUG("Error while loading configuration file");
+	init_ncurses();
 
 	while ( g_ctx->running )
 		tick();

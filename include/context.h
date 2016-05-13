@@ -12,6 +12,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include <curses.h>
+#include <linux/limits.h>
 
 /* pomodoro context
  */
@@ -67,6 +68,7 @@ typedef struct
 typedef struct {
 	bool                running;
 	long                delay;
+	char                config[PATH_MAX];
 	ttymato_pomodoro_t  pomodoro;
 	ttymato_options_t   options;
 	ttymato_curses_t    curses;
