@@ -16,6 +16,7 @@ BSD License. See Licence.md file.
 
 	usage: ttymato [-hunbN] [-D <pomodoro>,<break>,<longbreak>] [-p number] 
 		 -h 	 Print this help                                        
+		 -c 	 Path to configuration file 							
 		 -u 	 Urgent bell on intervals end                           
 		 -n 	 Notification on intervals end                          
 		 -N 	 Don't quit on keypress                                 
@@ -25,6 +26,17 @@ BSD License. See Licence.md file.
 
 # Screenshot
 ![Screenshot](https://raw.github.com/driquet/ttymato/master/screenshots/screenshot_0.png)
+
+# Configuration file
+Instead of using command line arguments, you can set ttymato parameters in its
+configuration file. You can specify the path of this file using command line
+argument `-c`. Otherwise, it will look for the configuration file at the
+following locations:
+* first `$XDG_CONFIG_HOME/ttymato/config`
+* then `$HOME/.config/ttymato/config`
+* and `$HOME/ttymato.conf`
+
+Configuration file syntax described in the manpage.
 
 # TODO
 * manpage
