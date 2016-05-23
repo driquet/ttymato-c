@@ -39,7 +39,6 @@ following locations:
 Configuration file syntax described in the manpage.
 
 # TODO
-* manpage
 * server-thread and cli client to get the status and interact with ttymato
 * display commands ("p=pause n=next ...") at the top or the bottom
 * action to start over the cycle at the beginning
