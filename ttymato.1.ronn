@@ -1,0 +1,69 @@
+ttymato(1) -- Pomodoro in your terminal
+=======================================
+
+## SYNOPSIS
+
+`ttymato` [<optional>...]
+
+## DESCRIPTION
+
+**ttymato** is a terminal application to manage your pomodoro cycle.
+
+## OPTIONS
+
+  * `-c` <configfile>:
+    Specifies an alternate configuration file path. By default, ttymato looks
+    for configuration files in the following order:
+
+    	1. ~/.config/ttymato/config (or $XDG_CONFIG_HOME/ttymato/config if set)
+    	2. ~/.ttymato.conf
+
+  * `-u`:
+    Enable ttymato to trigger an urgent bell on interval completion.
+
+  * `-n`:
+    Enable ttymato to send notification on interval completion, using
+    libnotify.
+
+  * `-N`:
+    Do not quit ttymato on 'q' keypress
+
+  * `-b`:
+    Enable colon blinking
+
+  * `-D` <pomodoro duration>,<break duration>,<longbreak duration>:
+    Specificies the duration of pomodoro, break and longbreak (in minutes).
+    Default are 25, 5 and 15 minutes.
+
+  * `-p` <number>:
+    Specifies the number of pomodoro in a complete cycle. Default is 4.
+
+  * `-h`:
+    Print the help message and exit.
+
+## CONFIGURATION
+
+The configuration file is a ini file. Lines starting with `#` are comments and
+empty lines are ignored. Each line describes a property, formatted as follow:
+`<key>=<value>`.
+
+By default, ttymato looks for configuration files at the following locations:
+
+	1. ~/.config/ttymato/config (or $XDG_CONFIG_HOME/ttymato/config if set)
+	2. ~/.ttymato.conf
+
+A configuration file can be specified using `-c` option, described above.
+
+## Bugs and feature requests
+
+Please report bugs and feature requests on
+[Github](https://github.com/driquet/ttymato).
+
+## AUTHOR
+
+Written by Damien Riquet <d.riquet@gmail.com>.
+
+## COPYRIGHT
+
+Copyright (C) 2016 Damien Riquet <damien.riquet@gmail.com>
+BSD Licence. See LICENCE file.
