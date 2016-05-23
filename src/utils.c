@@ -88,12 +88,12 @@ config_option_t ttymato_config_options[] =
 
 int parse_bool(const char *s_value, bool *value)
 {
-	if ( !strcmp(s_value, "true") )
+	if ( !strcmp(s_value, "on") )
 	{
 		*value = true;
 		return 1;
 	}
-	else if ( !strcmp(s_value, "false") )
+	else if ( !strcmp(s_value, "off") )
 	{
 		*value = false;
 		return 1;
