@@ -59,6 +59,8 @@ typedef struct
 	WINDOW                    *pomowin;
 	pomodoro_clock_display_t  display;
 	unsigned int              digits[4];
+	int                       color;
+	int                       bg;
 } ttymato_curses_t;
 
 /* global context

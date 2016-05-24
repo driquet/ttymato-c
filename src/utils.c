@@ -65,6 +65,7 @@ int load_config(const char *path)
 enum {
 	OPTION_NCURSES_BLINK,
 	OPTION_NCURSES_NOQUIT,
+	OPTION_NCURSES_COLOR,
 	OPTION_NOTIFICATION_URGENT,
 	OPTION_NOTIFICATION_NOTIFY,
 	OPTION_DURATION_POMODORO,
@@ -77,6 +78,7 @@ config_option_t ttymato_config_options[] =
 {
 	{"blink",               OPTION_NCURSES_BLINK       },
 	{"noquit",              OPTION_NCURSES_NOQUIT      },
+	{"color",               OPTION_NCURSES_COLOR       },
 	{"urgent",              OPTION_NOTIFICATION_URGENT },
 	{"notify",              OPTION_NOTIFICATION_NOTIFY },
 	{"pomodoro_duration",   OPTION_DURATION_POMODORO   },
@@ -121,30 +123,58 @@ case opt_val:                                                         \
 	}                                                                 \
 	else                                                              \
 	{                                                                 \
-		DEBUG("option %s expects bool values (true or false)", line); \
+		DEBUG("option %s expects bool values (on or off)", line);     \
 		error = true;                                                 \
 	}                                                                 \
 }                                                                     \
 break;
 
-#define TRY_PARSE_UNSIGNED_MULT_OPT(opt_val, var, mult)  \
+#define TRY_PARSE_DURATION_OPT(opt_val, var)  \
 case opt_val:                                            \
 {                                                        \
 	unsigned value;                                      \
 	if ( parse_int((const char *)s_value, &value) )      \
 	{                                                    \
 		DEBUG("option %s: %s", line, s_value);           \
-		var = value * mult;                              \
+		var = value * 60;                                \
 	}                                                    \
 	else                                                 \
 	{                                                    \
 		DEBUG("option %s expects integer values", line ) \
+		error = true;                                    \
 	}                                                    \
 }                                                        \
 break;
 
-#define TRY_PARSE_UNSIGNED_OPT(opt_val, val) TRY_PARSE_UNSIGNED_MULT_OPT(opt_val, val, 1)
-#define TRY_PARSE_DURATION_OPT(opt_val, val) TRY_PARSE_UNSIGNED_MULT_OPT(opt_val, val, 60)
+#define TRY_PARSE_UNSIGNED_OPT(opt_val, var, min, max)                          \
+case opt_val:                                                                   \
+{                                                                               \
+	unsigned value;                                                             \
+	if ( parse_int((const char *)s_value, &value) )                             \
+	{                                                                           \
+		if ( min != -1 && value < min )                                         \
+		{                                                                       \
+			DEBUG("option %s minimum value %d (%s given)", line, min, s_value); \
+			error = true;                                                       \
+		}                                                                       \
+		else if ( max != -1 && value > max )                                    \
+		{                                                                       \
+			DEBUG("option %s minimum value %d (%s given)", line, min, s_value); \
+			error = true;                                                       \
+		}                                                                       \
+		else                                                                    \
+		{                                                                       \
+			DEBUG("option %s: %s", line, s_value);                              \
+			var = value;                                                        \
+		}                                                                       \
+	}                                                                           \
+	else                                                                        \
+	{                                                                           \
+		DEBUG("option %s expects integer values", line )                        \
+		error = true;                                                           \
+	}                                                                           \
+}                                                                               \
+break;
 
 int try_parse_config(const char *path)
 {
@@ -183,18 +213,20 @@ int try_parse_config(const char *path)
 
 			TRY_PARSE_BOOL_OPT(OPTION_NCURSES_BLINK, g_options.blink);
 			TRY_PARSE_BOOL_OPT(OPTION_NCURSES_NOQUIT, g_options.noquit);
+			TRY_PARSE_UNSIGNED_OPT(OPTION_NCURSES_COLOR, g_ncurses.color, 0, 7);
 			TRY_PARSE_BOOL_OPT(OPTION_NOTIFICATION_URGENT, g_options.urgent);
 			TRY_PARSE_BOOL_OPT(OPTION_NOTIFICATION_NOTIFY, g_options.notify);
 			TRY_PARSE_DURATION_OPT(OPTION_DURATION_POMODORO, g_pomodoro.pomodoro_duration);
 			TRY_PARSE_DURATION_OPT(OPTION_DURATION_BREAK, g_pomodoro.break_duration);
 			TRY_PARSE_DURATION_OPT(OPTION_DURATION_LONGBREAK, g_pomodoro.longbreak_duration);
-			TRY_PARSE_UNSIGNED_OPT(OPTION_POMODORO_NUMBER, g_pomodoro.pomodoro_number);
+			TRY_PARSE_UNSIGNED_OPT(OPTION_POMODORO_NUMBER, g_pomodoro.pomodoro_number, 0, -1);
 
 			default:
 			DEBUG("unmanaged option: %s", line);
 			error = true;
 		}
 	}
+
 
 	if ( error )
 		goto close_error;

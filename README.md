@@ -43,4 +43,5 @@ Configuration file syntax described in the manpage.
 * display commands ("p=pause n=next ...") at the top or the bottom
 * action to start over the cycle at the beginning
 * options to ask confirmation when doing an irreversible action (quitting, starting over, and so on)
-* enable color support
+* check current configuration
+* 12/24 meridiem

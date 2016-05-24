@@ -51,15 +51,17 @@ void init_ncurses()
 			COLS / 2 - TOTAL_WIDTH / 2 + CLOCKVIEW_WIDTH
 		);
 
+	if(use_default_colors() == OK)
+		g_ncurses.bg = -1;
 
 	nodelay(stdscr, true);
 	wrefresh(g_ncurses.clockwin);
 
 	/* Init colors
 	 */
-	init_pair(0, COLOR_BLACK, COLOR_BLACK);
-	init_pair(1, COLOR_BLACK, COLOR_WHITE);
-	init_pair(2, COLOR_GREEN, COLOR_BLACK);
+	init_pair(0, g_ncurses.bg, g_ncurses.bg);
+	init_pair(1, COLOR_BLACK, g_ncurses.color);
+	init_pair(2, g_ncurses.color, g_ncurses.bg);
 	refresh();
 }
 
@@ -98,6 +100,7 @@ void draw_clock()
 
 	/* Cleaning window
 	 */
+	wbkgdset(g_ncurses.clockwin, COLOR_PAIR(0));
 	werase(g_ncurses.clockwin);
 
 	/* Digits
@@ -127,23 +130,22 @@ void draw_clock()
 	if ( state == TIME )
 		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(1));
 	else
-		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(0));
+		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(2));
 	mvwaddstr(g_ncurses.clockwin, 8, str_col_start, TIME_STR);
 
 
 	if ( state == ELAPSED )
 		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(1));
 	else
-		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(0));
+		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(2));
 	mvwaddstr(g_ncurses.clockwin, 8, str_col_start + strlen(TIME_STR) + SPACING , ELAPSED_STR);
 
 	if ( state == LEFT)
 		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(1));
 	else
-		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(0));
+		wbkgdset(g_ncurses.clockwin, COLOR_PAIR(2));
 	mvwaddstr(g_ncurses.clockwin, 8, str_col_start + strlen(TIME_STR) + strlen(ELAPSED_STR) + 2 * SPACING, LEFT_STR);
 
-	wbkgdset(g_ncurses.clockwin, COLOR_PAIR(0));
 	wrefresh(g_ncurses.clockwin);
 }
 
@@ -157,7 +159,7 @@ void draw_pomodoro()
 
 	/* separators
 	 */
-	wbkgdset(g_ncurses.pomowin, COLOR_PAIR(0));
+	wbkgdset(g_ncurses.pomowin, COLOR_PAIR(2));
 	for ( i = 2 ; i < POMOVIEW_HEIGHT - 3; ++i )
 		mvwaddch(g_ncurses.pomowin, i, 1, '|');
 

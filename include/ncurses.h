@@ -18,9 +18,9 @@
 #define TOTAL_WIDTH (CLOCKVIEW_WIDTH + POMOVIEW_WIDTH)
 #define TOTAL_HEIGHT (CLOCKVIEW_HEIGHT + POMOVIEW_HEIGHT)
 
-#define TIME_STR     "Time"
-#define ELAPSED_STR  "Elapsed"
-#define LEFT_STR     "Left"
+#define TIME_STR     " Time "
+#define ELAPSED_STR  " Elapsed "
+#define LEFT_STR     " Left "
 #define SPACING      2
 
 /*!

@@ -18,6 +18,9 @@ ttymato(1) -- Pomodoro in your terminal
     	1. ~/.config/ttymato/config (or $XDG_CONFIG_HOME/ttymato/config if set)
     	2. ~/.ttymato.conf
 
+  * `-C` [1-7]:
+    Set the color for the clock and the text.
+
   * `-u`:
     Enable ttymato to trigger an urgent bell on interval completion.
 
@@ -40,6 +43,26 @@ ttymato(1) -- Pomodoro in your terminal
 
   * `-h`:
     Print the help message and exit.
+
+## COMMANDS
+
+ttymato accepts a number of runtime keyboard commands, upper and lower case
+characters are treated the same way.
+
+  * `P`:
+    Pause or unpause the current interval
+
+  * `N`:
+    Go to the next interval.
+
+  * `S`:
+    Change the clock mode (current time, time left or elapsed time).
+
+  * `R`:
+    Reset the whole cycle and start over at the first pomodoro, paused.
+
+  * `Q`:
+    Quit.
 
 ## CONFIGURATION
 

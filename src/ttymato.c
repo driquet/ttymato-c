@@ -51,6 +51,11 @@ void init_config(void)
 	g_ctx->running = true;
 	g_ctx->delay   = DEFAULT_DELAY;
 
+	/* ncurses config
+	 */
+	g_ncurses.bg    = COLOR_BLACK;
+	g_ncurses.color = COLOR_GREEN;
+
 	/* Init signals
 	 */
 	sig.sa_handler = signal_handler;
@@ -103,9 +108,32 @@ void process_keys(void)
 			next_interval(g_ctx);
 			break;
 
+		case 'r':
+		case 'R':
+		g_pomodoro.state = PAUSED;
+		g_pomodoro.current_pomodoro = 0;
+		break;
+
+#define HANDLE_COLOR(color, val)                                                          \
+		case val:                                                                         \
+		{                                                                                 \
+			init_pair(1, color == COLOR_BLACK ? COLOR_WHITE : COLOR_BLACK, color); \
+			init_pair(2, color, g_ncurses.bg);                                            \
+		}                                                                                 \
+		break;
+
+		HANDLE_COLOR(0, '0');
+		HANDLE_COLOR(1, '1');
+		HANDLE_COLOR(2, '2');
+		HANDLE_COLOR(3, '3');
+		HANDLE_COLOR(4, '4');
+		HANDLE_COLOR(5, '5');
+		HANDLE_COLOR(6, '6');
+		HANDLE_COLOR(7, '7');
+
 		default:
-			sleep(g_ctx->delay);
-			break;
+		sleep(g_ctx->delay);
+		break;
 	}
 }
 
@@ -120,9 +148,10 @@ void tick(void)
 
 void usage(void)
 {
-	printf("usage: ttymato [-hunbN] [-c <config>] [-D <pomodoro>,<break>,<longbreak>] [-p number] \n"
+	printf("usage: ttymato [-hunbN] [-c <config>] [-D <pomodoro>,<break>,<longbreak>] [-p number] [-C [1-7]] \n"
 		"\t -h \t Print this help                                        \n"
 		"\t -c \t Path to configuration file                             \n"
+		"\t -C \t Set the color                                          \n"
 		"\t -u \t Urgent bell on intervals end                           \n"
 		"\t -n \t Notification on intervals end                          \n"
 		"\t -N \t Don't quit on keypress                                 \n"
@@ -150,7 +179,7 @@ void parse_args(int argc, char **argv)
 {
 	int c;
 
-	while ( (c = getopt(argc, argv, "hunbND:p:c:")) != -1 )
+	while ( (c = getopt(argc, argv, "hunbND:p:c:C:")) != -1 )
 	{
 		switch (c)
 		{
@@ -224,6 +253,10 @@ duration_end:
 			case 'c':
 			strncpy(g_ctx->config, optarg, sizeof(g_ctx->config));
 			break;
+
+			case 'C':
+			if ( atoi(optarg) >= 0 && atoi(optarg) < 8 )
+				g_ncurses.color = atoi(optarg);
 		}
 	}
 }
