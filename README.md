@@ -41,7 +41,6 @@ Configuration file syntax described in the manpage.
 # TODO
 * server-thread and cli client to get the status and interact with ttymato
 * display commands ("p=pause n=next ...") at the top or the bottom
-* action to start over the cycle at the beginning
 * options to ask confirmation when doing an irreversible action (quitting, starting over, and so on)
 * check current configuration
 * 12/24 meridiem
